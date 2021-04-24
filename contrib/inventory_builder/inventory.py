@@ -44,7 +44,7 @@ import re
 import subprocess
 import sys
 
-ROLES = ['all', 'kube-master', 'kube-node', 'etcd', 'k8s-cluster',
+ROLES = ['all', 'kube_control_plane', 'kube-node', 'etcd', 'k8s-cluster',
          'calico-rr']
 PROTECTED_NAMES = ROLES
 AVAILABLE_COMMANDS = ['help', 'print_cfg', 'print_ips', 'print_hostnames',
@@ -63,7 +63,9 @@ def get_var_as_bool(name, default):
 
 
 CONFIG_FILE = os.environ.get("CONFIG_FILE", "./inventory/sample/hosts.yaml")
-KUBE_MASTERS = int(os.environ.get("KUBE_MASTERS_MASTERS", 2))
+# Remove the reference of KUBE_MASTERS after some deprecation cycles.
+KUBE_CONTROL_HOSTS = int(os.environ.get("KUBE_CONTROL_HOSTS",
+                         os.environ.get("KUBE_MASTERS", 2)))
 # Reconfigures cluster distribution at scale
 SCALE_THRESHOLD = int(os.environ.get("SCALE_THRESHOLD", 50))
 MASSIVE_SCALE_THRESHOLD = int(os.environ.get("MASSIVE_SCALE_THRESHOLD", 200))
@@ -102,10 +104,11 @@ class KubesprayInventory(object):
             etcd_hosts_count = 3 if len(self.hosts.keys()) >= 3 else 1
             self.set_etcd(list(self.hosts.keys())[:etcd_hosts_count])
             if len(self.hosts) >= SCALE_THRESHOLD:
-                self.set_kube_master(list(self.hosts.keys())[
-                    etcd_hosts_count:(etcd_hosts_count + KUBE_MASTERS)])
+                self.set_kube_control_plane(list(self.hosts.keys())[
+                    etcd_hosts_count:(etcd_hosts_count + KUBE_CONTROL_HOSTS)])
             else:
-                self.set_kube_master(list(self.hosts.keys())[:KUBE_MASTERS])
+                self.set_kube_control_plane(
+                  list(self.hosts.keys())[:KUBE_CONTROL_HOSTS])
             self.set_kube_node(self.hosts.keys())
             if len(self.hosts) >= SCALE_THRESHOLD:
                 self.set_calico_rr(list(self.hosts.keys())[:etcd_hosts_count])
@@ -294,23 +297,25 @@ class KubesprayInventory(object):
             else:
                 self.yaml_config['all']['children'][group]['hosts'][host] = None  # noqa
 
-    def set_kube_master(self, hosts):
+    def set_kube_control_plane(self, hosts):
         for host in hosts:
-            self.add_host_to_group('kube-master', host)
+            self.add_host_to_group('kube_control_plane', host)
 
     def set_all(self, hosts):
         for host, opts in hosts.items():
             self.add_host_to_group('all', host, opts)
 
     def set_k8s_cluster(self):
-        k8s_cluster = {'children': {'kube-master': None, 'kube-node': None}}
+        k8s_cluster = {'children': {'kube_control_plane': None,
+                                    'kube-node': None}}
         self.yaml_config['all']['children']['k8s-cluster'] = k8s_cluster
 
     def set_calico_rr(self, hosts):
         for host in hosts:
-            if host in self.yaml_config['all']['children']['kube-master']:
+            if host in self.yaml_config['all']['children']['kube_control_plane']: # noqa
                 self.debug("Not adding {0} to calico-rr group because it "
-                           "conflicts with kube-master group".format(host))
+                           "conflicts with kube_control_plane "
+                           "group".format(host))
                 continue
             if host in self.yaml_config['all']['children']['kube-node']:
                 self.debug("Not adding {0} to calico-rr group because it "
@@ -327,10 +332,10 @@ class KubesprayInventory(object):
                                "group.".format(host))
                     continue
             if len(self.yaml_config['all']['hosts']) >= MASSIVE_SCALE_THRESHOLD:  # noqa
-                if host in self.yaml_config['all']['children']['kube-master']['hosts']:  # noqa
+                if host in self.yaml_config['all']['children']['kube_control_plane']['hosts']:  # noqa
                     self.debug("Not adding {0} to kube-node group because of "
-                               "scale deployment and host is in kube-master "
-                               "group.".format(host))
+                               "scale deployment and host is in "
+                               "kube_control_plane group.".format(host))
                     continue
             self.add_host_to_group('kube-node', host)
 
@@ -402,8 +407,9 @@ Configurable env vars:
 DEBUG                   Enable debug printing. Default: True
 CONFIG_FILE             File to write config to Default: ./inventory/sample/hosts.yaml
 HOST_PREFIX             Host prefix for generated hosts. Default: node
+KUBE_CONTROL_HOSTS      Set the number of kube-control-planes. Default: 2
 SCALE_THRESHOLD         Separate ETCD role if # of nodes >= 50
-MASSIVE_SCALE_THRESHOLD Separate K8s master and ETCD if # of nodes >= 200
+MASSIVE_SCALE_THRESHOLD Separate K8s control-plane and ETCD if # of nodes >= 200
 '''  # noqa
         print(help_text)
 

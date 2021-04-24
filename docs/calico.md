@@ -58,13 +58,14 @@ To re-define you need to edit the inventory and add a group variable `calico_net
 calico_network_backend: none
 ```
 
-### Optional : Define the default pool CIDR
+### Optional : Define the default pool CIDRs
 
-By default, `kube_pods_subnet` is used as the IP range CIDR for the default IP Pool.
-In some cases you may want to add several pools and not have them considered by Kubernetes as external (which means that they must be within or equal to the range defined in `kube_pods_subnet`), it starts with the default IP Pool of which IP range CIDR can by defined in group_vars (k8s-cluster/k8s-net-calico.yml):
+By default, `kube_pods_subnet` is used as the IP range CIDR for the default IP Pool, and `kube_pods_subnet_ipv6` for IPv6.
+In some cases you may want to add several pools and not have them considered by Kubernetes as external (which means that they must be within or equal to the range defined in `kube_pods_subnet` and `kube_pods_subnet_ipv6` ), it starts with the default IP Pools of which IP range CIDRs can by defined in group_vars (k8s-cluster/k8s-net-calico.yml):
 
 ```ShellSession
 calico_pool_cidr: 10.233.64.0/20
+calico_pool_cidr_ipv6: fd85:ee78:d8a6:8607::1:0000/112
 ```
 
 ### Optional : BGP Peering with border routers
@@ -121,7 +122,7 @@ recommended here:
 You need to edit your inventory and add:
 
 * `calico-rr` group with nodes in it. `calico-rr` can be combined with
-  `kube-node` and/or `kube-master`. `calico-rr` group also must be a child
+  `kube-node` and/or `kube_control_plane`. `calico-rr` group also must be a child
    group of `k8s-cluster` group.
 * `cluster_id` by route reflector node/group (see details
 [here](https://hub.docker.com/r/calico/routereflector/))
@@ -137,7 +138,7 @@ node3 ansible_ssh_host=10.210.1.13 ip=10.210.1.13
 node4 ansible_ssh_host=10.210.1.14 ip=10.210.1.14
 node5 ansible_ssh_host=10.210.1.15 ip=10.210.1.15
 
-[kube-master]
+[kube_control_plane]
 node2
 node3
 
@@ -154,7 +155,7 @@ node5
 
 [k8s-cluster:children]
 kube-node
-kube-master
+kube_control_plane
 calico-rr
 
 [calico-rr]

@@ -279,7 +279,7 @@ access the API server. This kubeconfig file will thus not work of from
 outside of the VPC network. We will need to change the API server IP address
 to the controller node his external IP address. The external IP address will be
 accepted in the
-TLS negotation as we added the controllers external IP addresses in the SSL
+TLS negotiation as we added the controllers external IP addresses in the SSL
 certificate configuration.
 Open the file and modify the server IP address from the local IP to the
 external IP address of controller-0, as stored in $IP_CONTROLLER_0.
@@ -353,7 +353,7 @@ each other:
 ```ShellSession
 kubectl run myshell1 -it --rm --image busybox -- sh
 hostname -i
-# launch myshell2 in seperate terminal (see next code block) and ping the hostname of myshell2
+# launch myshell2 in separate terminal (see next code block) and ping the hostname of myshell2
 ping <hostname myshell2>
 ```
 
@@ -589,7 +589,7 @@ Delete the dev namespace, the nginx deployment and service:
 ```ShellSession
 kubectl delete namespace dev
 kubectl delete deployment nginx
-kubectl delete svc/ngninx
+kubectl delete svc/nginx
 ```
 
 ### Kubernetes state

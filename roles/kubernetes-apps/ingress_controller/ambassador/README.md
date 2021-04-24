@@ -24,11 +24,15 @@ versions of Ambassador as they become available.
 
 ## Configuration
 
-* `ingress_ambassador_namespace` (default `ambassador`): namespace for installing Ambassador.
-* `ingress_ambassador_update_window` (default `0 0 * * SUN`): _crontab_-like expression
+- `ingress_ambassador_namespace` (default `ambassador`): namespace for installing Ambassador.
+- `ingress_ambassador_update_window` (default `0 0 * * SUN`): _crontab_-like expression
   for specifying when the Operator should try to update the Ambassador API Gateway.
-* `ingress_ambassador_version` (defaulkt: `*`): SemVer rule for versions allowed for
+- `ingress_ambassador_version` (defaulkt: `*`): SemVer rule for versions allowed for
   installation/updates.
+- `ingress_ambassador_multi_namespaces` (default `false`): By default, Ambassador will only
+  watch the `ingress_ambassador_namespace` namespace for `AmbassadorInstallation` CRD resources.
+  When set to `true`, this value will tell the Ambassador Operator to watch **all** namespaces
+  for CRDs. If you want to run multiple Ambassador ingress instances, set this to `true`.
 
 ## Ingress annotations
 
