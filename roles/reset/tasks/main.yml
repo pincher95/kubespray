@@ -206,8 +206,9 @@
 
 - name: Clear IPVS virtual server table
   command: "ipvsadm -C"
+  ignore_errors: yes
   when:
-    - kube_proxy_mode == 'ipvs' and inventory_hostname in groups['k8s-cluster']
+    - kube_proxy_mode == 'ipvs' and inventory_hostname in groups['k8s_cluster']
 
 - name: reset | check kube-ipvs0 network device
   stat:
@@ -287,6 +288,7 @@
     - "{{ bin_dir }}/calico-upgrade"
     - "{{ bin_dir }}/weave"
     - "{{ bin_dir }}/crictl"
+    - "{{ bin_dir }}/nerdctl"
     - "{{ bin_dir }}/netctl"
     - "{{ bin_dir }}/k8s-certs-renew.sh"
     - /var/lib/cni
@@ -298,6 +300,8 @@
     - /run/calico
     - /etc/bash_completion.d/kubectl.sh
     - /etc/bash_completion.d/crictl
+    - /etc/bash_completion.d/nerdctl
+    - "{{ krew_root_dir }}"
   ignore_errors: yes
   tags:
     - files
